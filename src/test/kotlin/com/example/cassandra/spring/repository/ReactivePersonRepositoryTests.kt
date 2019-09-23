@@ -1,23 +1,20 @@
 package com.example.cassandra.spring.repository
 
 import com.example.cassandra.spring.domain.Person
-import org.junit.Before
-import org.junit.Test
-import org.junit.runner.RunWith
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.test.context.junit4.SpringRunner
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import reactor.test.StepVerifier
 
-@RunWith(SpringRunner::class)
 @SpringBootTest
 class ReactivePersonRepositoryTests {
     @Autowired
     private lateinit var repository: ReactivePersonRepository
 
-    @Before
+    @BeforeEach
     fun `'setup' creates table and insert some rows`() {
         val deleteAndInsert = repository
                 .deleteAll()
@@ -34,21 +31,21 @@ class ReactivePersonRepositoryTests {
     fun `'insert' should performs a count, inserts data and performs a count again using reactive operator chaining`() {
         val saveAndCount = repository
                 .count()
-                .doOnNext({cnt -> println(cnt)})
+                .doOnNext({ cnt -> println(cnt) })
                 .thenMany(repository.saveAll(Flux.just(
                         Person("Hank", "Schrader", 43),
                         Person("Mike", "Ehrmantraut", 62)
                 )))
                 .last()
                 .flatMap { _ -> repository.count() }
-                .doOnNext({cnt -> println(cnt)})
+                .doOnNext({ cnt -> println(cnt) })
         StepVerifier.create(saveAndCount).expectNext(6).verifyComplete()
     }
 
     @Test
     fun `'performConversion' should performs conversion before result processing`() {
         StepVerifier
-                .create(repository.findAll().doOnNext({value -> println(value)}))
+                .create(repository.findAll().doOnNext({ value -> println(value) }))
                 .expectNextCount(4)
                 .verifyComplete()
     }
